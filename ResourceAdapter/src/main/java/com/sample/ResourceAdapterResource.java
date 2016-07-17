@@ -16,14 +16,19 @@
 package com.sample;
 
 import com.ibm.mfp.adapter.api.OAuthSecurity;
+import com.ibm.mfp.server.registration.external.model.AuthenticatedUser;
+import com.ibm.mfp.server.security.external.resource.AdapterSecurityContext;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("/")
 public class ResourceAdapterResource {
+
+	@Context
+	AdapterSecurityContext securityContext;
 
 	/* Path for method: "<server address>/mfp/api/adapters/ResourceAdapter" */
 	@GET
@@ -34,5 +39,27 @@ public class ResourceAdapterResource {
 		return "19938.80";
 	}
 
+	@POST
+	@Path("/transfer")
+	@OAuthSecurity(scope="transferPrivilege") //This method is protected. Each application can define what "transferPrivilege" means.
+	public Response transfer(@FormParam("amount") float amount){
+		return Response.ok().build();
+	}
 
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path("/publicData")
+	@OAuthSecurity(enabled=false)
+	public String getPublicData(){
+		return "Lorem ipsum dolor sit amet, modo oratio cu nam, mei graece dicunt tamquam ne.";
+	}
+
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	@OAuthSecurity(scope = "transactions")
+	@Path("/transactions")
+	public String getTransactions(){
+		AuthenticatedUser currentUser = securityContext.getAuthenticatedUser();
+		return "Transactions for " + currentUser.getDisplayName() + ":\n{'date':'12/01/2016', 'amount':'19938.80'}";
+	}
 }
